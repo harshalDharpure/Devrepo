@@ -1,0 +1,24 @@
+# Cloud Run deployment for backend
+# gcloud run deploy venturepilot-backend --source . --dockerfile backend/Dockerfile
+
+steps:
+  - name: "gcr.io/cloud-builders/docker"
+    args: ["build", "-t", "gcr.io/$PROJECT_ID/venturepilot-backend", "-f", "backend/Dockerfile", "."]
+
+  - name: "gcr.io/cloud-builders/docker"
+    args: ["push", "gcr.io/$PROJECT_ID/venturepilot-backend"]
+
+  - name: "gcr.io/google.com/cloudsdktool/cloud-sdk"
+    entrypoint: gcloud
+    args:
+      - run
+      - deploy
+      - venturepilot-backend
+      - --image=gcr.io/$PROJECT_ID/venturepilot-backend
+      - --region=us-central1
+      - --platform=managed
+      - --allow-unauthenticated
+      - --set-env-vars=DEMO_MODE=true,USE_MOCK_RETRIEVAL=true
+
+images:
+  - gcr.io/$PROJECT_ID/venturepilot-backend
