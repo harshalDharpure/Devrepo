@@ -184,7 +184,7 @@ gcloud builds submit --config cloudbuild.yaml
 - **Backend:** FastAPI, asyncio, SSE streaming
 - **AI:** Google ADK, Gemini 2.5 Pro, Pydantic structured output
 - **Retrieval:** Vertex AI Search, Elastic MCP
-- **Database:** MongoDB Atlas
+- **Database:** MongoDB Atlas, MongoDB Vector Search
 - **Reports:** ReportLab PDF generation
 - **Deploy:** Google Cloud Run, Docker
 
