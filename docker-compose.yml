@@ -10,6 +10,7 @@ services:
     environment:
       - DEMO_MODE=true
       - USE_MOCK_RETRIEVAL=true
+      - GOOGLE_GENAI_USE_VERTEXAI=false
       - MONGODB_URI=mongodb://mongo:27017
       - MONGODB_DB=venturepilot
       - CORS_ORIGINS=http://localhost:3000

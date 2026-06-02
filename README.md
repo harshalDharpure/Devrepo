@@ -1,8 +1,8 @@
 # VenturePilot AI
 
-**Autonomous multi-agent startup validation system** powered by Google ADK + Gemini 2.5 Pro.
+**Workflow-driven multi-agent startup validation system** powered by Google ADK + Gemini 2.5 Pro.
 
-VenturePilot AI validates startup ideas using real-world evidence, RAG retrieval, web intelligence, legal analysis, competitor analysis, and structured scoring — all orchestrated through a visible multi-agent pipeline.
+VenturePilot AI validates startup ideas using real-world evidence, RAG retrieval, legal risk screening, competitor analysis frameworking, and structured scoring — all coordinated by a visible backend workflow.
 
 ![Architecture](https://img.shields.io/badge/Google_ADK-Orchestration-4285F4) ![Gemini](https://img.shields.io/badge/Gemini-2.5_Pro-8E75B2) ![FastAPI](https://img.shields.io/badge/FastAPI-Backend-009688) ![Next.js](https://img.shields.io/badge/Next.js_15-Frontend-000)
 
@@ -17,20 +17,19 @@ VenturePilot AI validates startup ideas using real-world evidence, RAG retrieval
 └─────────────┘     └──────────────────┬───────────────────────────────┘
                                        │
                     ┌──────────────────▼───────────────────────────────┐
-                    │           Google ADK Orchestrator                   │
-                    │  ┌──────────┐  ┌─────────┐  ┌─────────┐         │
-                    │  │Front Desk│→ │ Market  │  │Competitor│         │
-                    │  └──────────┘  │ Research│  │ Analysis │         │
-                    │                └────┬────┘  └────┬─────┘         │
-                    │  ┌─────────┐  ┌────┴────┐  ┌────┴─────┐         │
-                    │  │  Legal  │  │  Debate  │→│ Scoring  │→ Report │
-                    │  └─────────┘  └─────────┘  └──────────┘         │
+                    │         Validation Workflow + ADK Agents           │
+                    │  ┌──────────┐       ┌───────────────┐          │
+                    │  │Front Desk│──────▶│Market Research│          │
+                    │  └────┬─────┘       └───────┬───────┘          │
+                    │       ├────────────▶ Competitor Framework       │
+                    │       ├────────────▶ Legal Framework            │
+                    │       └────────────────────▶ Scoring → Report   │
                     └──────────────────┬───────────────────────────────┘
                                        │
               ┌────────────────────────┼────────────────────────┐
               │                        │                        │
-        Vertex AI Search        Elastic MCP              Gemini 2.5 Pro
-        (Market RAG)           (Competitor Intel)        (Structured Output)
+        Vertex AI Search        Google ADK              Gemini 2.5 Pro
+        (Market RAG)           (Agent Runtime)          (Structured Output)
 ```
 
 ## Agent Pipeline
@@ -38,13 +37,13 @@ VenturePilot AI validates startup ideas using real-world evidence, RAG retrieval
 | Agent | Responsibility |
 |-------|---------------|
 | **Front Desk** | Validates idea quality, extracts context, asks clarifying questions |
-| **Orchestrator** | Dynamic agent invocation, state management, retries |
-| **Market Research** | TAM/SAM/SOM, trends, growth opportunities via RAG |
-| **Competitor Analysis** | Direct competitors, saturation, SWOT matrix |
-| **Legal** | Compliance risks, regulations by geography |
-| **Debate** | Contradiction detection, conflict resolution, confidence |
+| **Market Research** | Detailed TAM/SAM/SOM, trends, growth opportunities via Vertex AI Search/RAG |
+| **Competitor Analysis** | Basic framework for direct competitors, saturation, SWOT matrix |
+| **Legal** | Basic framework for compliance risks, regulations by geography |
 | **Scoring Engine** | 5-dimension validation scoring |
 | **Report Generator** | Executive summary, lean canvas, PDF export |
+
+The backend workflow owns routing, state, progress events, retries, and fan-out/fan-in. Debate is intentionally not implemented yet.
 
 ## Quick Start
 
@@ -100,7 +99,6 @@ docker-compose up --build
    - *"Market Agent researching TAM/SAM/SOM…"*
    - *"Competitor Agent analyzing landscape…"*
    - *"Legal Agent checking regulations…"*
-   - *"Debate Agent resolving conflicts…"*
 5. View the structured report with scores, SWOT, lean canvas
 6. Click **"Download PDF"** for the full report
 
@@ -128,14 +126,13 @@ venturepilot/
 ├── backend/           # FastAPI + SSE streaming + MongoDB
 ├── agents/            # Google ADK agent implementations
 │   ├── front_desk.py
-│   ├── orchestrator.py
 │   ├── market_research.py
 │   ├── competitor_analysis.py
 │   ├── legal.py
-│   ├── debate.py
 │   ├── scoring.py
 │   └── report_generator.py
-├── rag/               # Vertex AI Search + Elastic retrieval
+├── backend/services/  # Validation workflow, storage, PDF generation
+├── rag/               # Vertex AI Search retrieval
 ├── tools/             # LLM client + Elastic MCP
 ├── shared/            # Pydantic schemas
 ├── docker-compose.yml
@@ -172,10 +169,12 @@ gcloud builds submit --config cloudbuild.yaml
 |----------|---------|-------------|
 | `GOOGLE_API_KEY` | — | Gemini API key |
 | `GEMINI_MODEL` | `gemini-2.5-pro` | LLM model |
+| `GOOGLE_GENAI_USE_VERTEXAI` | `false` | Use Vertex AI instead of API-key Gemini |
+| `GOOGLE_CLOUD_PROJECT` | — | GCP project for Vertex AI / Vertex AI Search |
+| `GOOGLE_CLOUD_LOCATION` | `us-central1` | Vertex AI model location |
 | `DEMO_MODE` | `true` | Use mock LLM responses |
 | `USE_MOCK_RETRIEVAL` | `true` | Use mock RAG data |
 | `MONGODB_URI` | `mongodb://localhost:27017` | MongoDB connection |
-| `ELASTIC_MCP_URL` | — | Elastic MCP server URL |
 | `VERTEX_SEARCH_DATA_STORE` | — | Vertex AI Search data store |
 
 ## Tech Stack
@@ -183,7 +182,7 @@ gcloud builds submit --config cloudbuild.yaml
 - **Frontend:** Next.js 15, TypeScript, Tailwind CSS, shadcn/ui, Framer Motion
 - **Backend:** FastAPI, asyncio, SSE streaming
 - **AI:** Google ADK, Gemini 2.5 Pro, Pydantic structured output
-- **Retrieval:** Vertex AI Search, Elastic MCP
+- **Retrieval:** Vertex AI Search, mock retrieval for demo mode
 - **Database:** MongoDB Atlas, MongoDB Vector Search
 - **Reports:** ReportLab PDF generation
 - **Deploy:** Google Cloud Run, Docker

@@ -1,10 +1,8 @@
 export type AgentName =
   | "front_desk"
-  | "orchestrator"
   | "market_research"
   | "competitor_analysis"
   | "legal"
-  | "debate"
   | "scoring"
   | "report";
 
@@ -94,24 +92,15 @@ export interface ValidationReport {
     evidence: EvidenceCitation[];
     confidence: number;
   };
-  debate: {
-    contradictions: string[];
-    resolutions: string[];
-    consensus_points: string[];
-    dissenting_views: string[];
-    overall_confidence: number;
-  };
   evidence_citations: EvidenceCitation[];
   generated_at: string;
 }
 
 export const AGENT_META: Record<AgentName, { label: string; icon: string; color: string }> = {
   front_desk: { label: "Front Desk", icon: "🛎️", color: "#6366f1" },
-  orchestrator: { label: "Orchestrator", icon: "🧠", color: "#8b5cf6" },
   market_research: { label: "Market Research", icon: "📊", color: "#06b6d4" },
   competitor_analysis: { label: "Competitor Analysis", icon: "⚔️", color: "#f59e0b" },
   legal: { label: "Legal", icon: "⚖️", color: "#ef4444" },
-  debate: { label: "Debate", icon: "💬", color: "#ec4899" },
   scoring: { label: "Scoring Engine", icon: "🎯", color: "#10b981" },
   report: { label: "Report Generator", icon: "📄", color: "#a78bfa" },
 };
