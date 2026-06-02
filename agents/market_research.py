@@ -2,10 +2,9 @@ from __future__ import annotations
 
 import json
 
-from agents.base import AgentDescriptor, DomainAgent
+from agents.base import AdkExecutionError, AgentDescriptor, DomainAgent
 from rag.vertex_search import MarketRetriever
 from shared.schemas import AgentName, EvidenceCitation, ExtractedIdea, MarketResearchOutput
-from tools.llm_client import GeminiClient, LLMUnavailableError
 
 
 class MarketResearchAgent(DomainAgent):
@@ -16,11 +15,11 @@ class MarketResearchAgent(DomainAgent):
             "growth signals, trends, opportunities, risks, customer segments, buyer personas, "
             "go-to-market signals, and confidence. Prefer cited retrieval evidence."
         ),
+        output_schema=MarketResearchOutput,
     )
 
-    def __init__(self, retriever: MarketRetriever, llm: GeminiClient | None = None) -> None:
+    def __init__(self, retriever: MarketRetriever) -> None:
         self.retriever = retriever
-        self.llm = llm or GeminiClient()
 
     async def run(self, idea: ExtractedIdea) -> MarketResearchOutput:
         geography = ", ".join(idea.geographies)
@@ -30,15 +29,15 @@ class MarketResearchAgent(DomainAgent):
             geography=geography,
         )
 
-        if self.llm.enabled:
+        if self.adk_enabled:
             try:
-                return await self._run_with_gemini(idea, evidence)
-            except (LLMUnavailableError, ValueError, json.JSONDecodeError):
+                return await self._run_with_adk(idea, evidence)
+            except (AdkExecutionError, ValueError, json.JSONDecodeError):
                 pass
 
         return self._demo_market_research(idea, evidence)
 
-    async def _run_with_gemini(
+    async def _run_with_adk(
         self,
         idea: ExtractedIdea,
         evidence: list[EvidenceCitation],
@@ -76,7 +75,7 @@ Rules:
 - Give 3-5 trends, 3-5 opportunities, and 2-4 risks.
 - confidence should reflect evidence quality and market specificity.
 """
-        payload = await self.llm.generate_json(prompt)
+        payload = await self.run_adk_json(prompt)
         if not payload.get("evidence"):
             payload["evidence"] = [item.model_dump() for item in evidence]
         return MarketResearchOutput.model_validate(payload)
@@ -143,4 +142,3 @@ Rules:
             evidence=evidence,
             confidence=0.74 if evidence else 0.56,
         )
-

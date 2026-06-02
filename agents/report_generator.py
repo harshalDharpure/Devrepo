@@ -1,6 +1,8 @@
 from __future__ import annotations
 
-from agents.base import AgentDescriptor, DomainAgent
+import json
+
+from agents.base import AdkExecutionError, AgentDescriptor, DomainAgent
 from shared.schemas import (
     AgentName,
     CompetitorAnalysisOutput,
@@ -18,9 +20,52 @@ class ReportGeneratorAgent(DomainAgent):
     descriptor = AgentDescriptor(
         name=AgentName.REPORT,
         instruction="Generate the final startup validation report from workflow state.",
+        output_schema=ValidationReport,
     )
 
     async def run(
+        self,
+        session_id: str,
+        idea: ExtractedIdea,
+        market: MarketResearchOutput,
+        competitors: CompetitorAnalysisOutput,
+        legal: LegalAnalysisOutput,
+        scores: ValidationScores,
+    ) -> ValidationReport:
+        report = self._deterministic_report(session_id, idea, market, competitors, legal, scores)
+        if self.adk_enabled:
+            try:
+                return await self._run_with_adk(report)
+            except (AdkExecutionError, ValueError, json.JSONDecodeError):
+                pass
+        return report
+
+    async def _run_with_adk(self, draft: ValidationReport) -> ValidationReport:
+        prompt = f"""
+Polish this startup validation report while preserving its schema, scores, evidence citations, and core findings.
+
+Return JSON only matching the same object shape. You may improve:
+- executive_summary
+- recommendations
+- key_risks wording
+- lean_canvas wording
+- swot wording
+
+Do not remove required fields. Do not invent citations or URLs.
+
+Draft report:
+{draft.model_dump_json(indent=2)}
+"""
+        payload = await self.run_adk_json(prompt)
+        payload.setdefault("session_id", draft.session_id)
+        payload.setdefault("scores", draft.scores.model_dump())
+        payload.setdefault("market_research", draft.market_research.model_dump())
+        payload.setdefault("competitor_analysis", draft.competitor_analysis.model_dump())
+        payload.setdefault("legal_analysis", draft.legal_analysis.model_dump())
+        payload.setdefault("evidence_citations", [item.model_dump() for item in draft.evidence_citations])
+        return ValidationReport.model_validate(payload)
+
+    def _deterministic_report(
         self,
         session_id: str,
         idea: ExtractedIdea,

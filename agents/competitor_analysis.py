@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from agents.base import AgentDescriptor, DomainAgent
+from agents.base import AdkExecutionError, AgentDescriptor, DomainAgent
 from shared.schemas import AgentName, CompetitorAnalysisOutput, CompetitorRecord, EvidenceCitation, ExtractedIdea
 
 
@@ -11,9 +11,51 @@ class CompetitorAnalysisAgent(DomainAgent):
             "Map direct and adjacent competitors, saturation, SWOT, and differentiation. "
             "This implementation is intentionally a basic framework pending specialist enrichment."
         ),
+        output_schema=CompetitorAnalysisOutput,
     )
 
     async def run(self, idea: ExtractedIdea) -> CompetitorAnalysisOutput:
+        if self.adk_enabled:
+            try:
+                return await self._run_with_adk(idea)
+            except (AdkExecutionError, ValueError):
+                pass
+        return self._framework_output(idea)
+
+    async def _run_with_adk(self, idea: ExtractedIdea) -> CompetitorAnalysisOutput:
+        prompt = f"""
+Create a basic competitor-analysis framework for this startup idea.
+
+Return JSON only. Required shape:
+{{
+  "direct_competitors": [
+    {{
+      "name": "string",
+      "description": "string",
+      "pricing": "string",
+      "business_model": "string",
+      "strengths": ["string"],
+      "weaknesses": ["string"]
+    }}
+  ],
+  "market_saturation": "low|medium|high",
+  "differentiation_opportunities": ["string"],
+  "swot": {{"strengths": ["string"], "weaknesses": ["string"], "opportunities": ["string"], "threats": ["string"]}},
+  "evidence": [
+    {{"source": "string", "title": "string", "snippet": "string", "url": null, "relevance_score": 0.0}}
+  ],
+  "confidence": 0.0
+}}
+
+Keep this lightweight. Do not claim live web research. Mark evidence as framework-level unless a source is supplied.
+
+Startup idea:
+{idea.model_dump_json(indent=2)}
+"""
+        payload = await self.run_adk_json(prompt)
+        return CompetitorAnalysisOutput.model_validate(payload)
+
+    def _framework_output(self, idea: ExtractedIdea) -> CompetitorAnalysisOutput:
         category = idea.industry.title()
         return CompetitorAnalysisOutput(
             direct_competitors=[

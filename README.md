@@ -57,7 +57,8 @@ The backend workflow owns routing, state, progress events, retries, and fan-out/
 
 ```bash
 cp .env.example .env
-# Set GOOGLE_API_KEY for live Gemini calls, or keep DEMO_MODE=true
+# Set GOOGLE_API_KEY, or Vertex AI env vars, and DEMO_MODE=false for live ADK agent calls.
+# Keep DEMO_MODE=true for deterministic local demo output.
 ```
 
 ### 2. Backend
@@ -133,7 +134,7 @@ venturepilot/
 │   └── report_generator.py
 ├── backend/services/  # Validation workflow, storage, PDF generation
 ├── rag/               # Vertex AI Search retrieval
-├── tools/             # LLM client + Elastic MCP
+├── tools/             # Reserved integration helpers
 ├── shared/            # Pydantic schemas
 ├── docker-compose.yml
 └── cloudbuild.yaml
@@ -167,12 +168,12 @@ gcloud builds submit --config cloudbuild.yaml
 
 | Variable | Default | Description |
 |----------|---------|-------------|
-| `GOOGLE_API_KEY` | — | Gemini API key |
+| `GOOGLE_API_KEY` | — | Gemini API key used by Google ADK when not using Vertex AI |
 | `GEMINI_MODEL` | `gemini-2.5-pro` | LLM model |
-| `GOOGLE_GENAI_USE_VERTEXAI` | `false` | Use Vertex AI instead of API-key Gemini |
-| `GOOGLE_CLOUD_PROJECT` | — | GCP project for Vertex AI / Vertex AI Search |
+| `GOOGLE_GENAI_USE_VERTEXAI` | `false` | Use Vertex AI-backed Gemini through Google ADK |
+| `GOOGLE_CLOUD_PROJECT` | — | GCP project for Vertex AI and Vertex AI Search |
 | `GOOGLE_CLOUD_LOCATION` | `us-central1` | Vertex AI model location |
-| `DEMO_MODE` | `true` | Use mock LLM responses |
+| `DEMO_MODE` | `true` | Use deterministic local agent fallbacks instead of live ADK calls |
 | `USE_MOCK_RETRIEVAL` | `true` | Use mock RAG data |
 | `MONGODB_URI` | `mongodb://localhost:27017` | MongoDB connection |
 | `VERTEX_SEARCH_DATA_STORE` | — | Vertex AI Search data store |
@@ -181,7 +182,7 @@ gcloud builds submit --config cloudbuild.yaml
 
 - **Frontend:** Next.js 15, TypeScript, Tailwind CSS, shadcn/ui, Framer Motion
 - **Backend:** FastAPI, asyncio, SSE streaming
-- **AI:** Google ADK, Gemini 2.5 Pro, Pydantic structured output
+- **AI:** Google ADK `LlmAgent`, Gemini 2.5 Pro, Pydantic structured output
 - **Retrieval:** Vertex AI Search, mock retrieval for demo mode
 - **Database:** MongoDB Atlas, MongoDB Vector Search
 - **Reports:** ReportLab PDF generation

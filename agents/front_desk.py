@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import re
 
-from agents.base import AgentDescriptor, DomainAgent
+from agents.base import AdkExecutionError, AgentDescriptor, DomainAgent
 from shared.schemas import AgentName, ExtractedIdea
 
 
@@ -13,9 +13,62 @@ class FrontDeskAgent(DomainAgent):
             "Validate startup idea quality, extract industry, customer, geography, "
             "business model, and ask concise clarification questions when the idea is underspecified."
         ),
+        output_schema=ExtractedIdea,
     )
 
     async def run(self, description: str, clarifications: dict[str, str] | None = None) -> ExtractedIdea:
+        if self.adk_enabled:
+            try:
+                return await self._run_with_adk(description, clarifications)
+            except (AdkExecutionError, ValueError):
+                pass
+        return self._run_heuristic(description, clarifications)
+
+    async def _run_with_adk(
+        self,
+        description: str,
+        clarifications: dict[str, str] | None = None,
+    ) -> ExtractedIdea:
+        prompt = f"""
+Extract and validate this startup idea for a downstream startup-validation workflow.
+
+Return JSON only. Required shape:
+{{
+  "original_description": "string",
+  "idea_summary": "string",
+  "industry": "string",
+  "target_audience": "string",
+  "business_model": "string",
+  "geographies": ["string"],
+  "pricing": null,
+  "keywords": ["string"],
+  "quality_score": 0.0,
+  "needs_clarification": false,
+  "clarification_questions": ["string"]
+}}
+
+Rules:
+- quality_score is 0 to 1.
+- needs_clarification is true only if the idea lacks enough customer/problem/business-model context to proceed.
+- Ask at most 3 clarification questions.
+- Default geography to "United States" only when none is stated.
+
+Description:
+{description}
+
+Clarifications:
+{clarifications or {}}
+"""
+        payload = await self.run_adk_json(prompt)
+        if not payload.get("original_description"):
+            payload["original_description"] = description
+        return ExtractedIdea.model_validate(payload)
+
+    def _run_heuristic(
+        self,
+        description: str,
+        clarifications: dict[str, str] | None = None,
+    ) -> ExtractedIdea:
         merged = description.strip()
         if clarifications:
             merged = f"{merged}\nClarifications: {clarifications}"
@@ -134,4 +187,3 @@ class FrontDeskAgent(DomainAgent):
             if word not in stop and word not in unique:
                 unique.append(word)
         return unique[:12]
-

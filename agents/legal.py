@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from agents.base import AgentDescriptor, DomainAgent
+from agents.base import AdkExecutionError, AgentDescriptor, DomainAgent
 from shared.schemas import AgentName, EvidenceCitation, ExtractedIdea, LegalAnalysisOutput
 
 
@@ -11,9 +11,48 @@ class LegalAgent(DomainAgent):
             "Identify compliance, privacy, licensing, and geography-specific risks. "
             "This implementation is a framework and not legal advice."
         ),
+        output_schema=LegalAnalysisOutput,
     )
 
     async def run(self, idea: ExtractedIdea) -> LegalAnalysisOutput:
+        if self.adk_enabled:
+            try:
+                return await self._run_with_adk(idea)
+            except (AdkExecutionError, ValueError):
+                pass
+        return self._framework_output(idea)
+
+    async def _run_with_adk(self, idea: ExtractedIdea) -> LegalAnalysisOutput:
+        prompt = f"""
+Create a preliminary legal and compliance risk framework for this startup idea.
+
+Return JSON only. Required shape:
+{{
+  "compliance_risks": ["string"],
+  "regulations": ["string"],
+  "licensing_requirements": ["string"],
+  "privacy_concerns": ["string"],
+  "geography_specific": {{"Geography": ["string"]}},
+  "overall_risk_level": "low|medium|high",
+  "evidence": [
+    {{"source": "string", "title": "string", "snippet": "string", "url": null, "relevance_score": 0.0}}
+  ],
+  "confidence": 0.0
+}}
+
+Rules:
+- This is not legal advice.
+- Keep it jurisdiction-aware for the listed geographies.
+- Do not invent citations or URLs.
+- Mark evidence as framework-level unless a source is supplied.
+
+Startup idea:
+{idea.model_dump_json(indent=2)}
+"""
+        payload = await self.run_adk_json(prompt)
+        return LegalAnalysisOutput.model_validate(payload)
+
+    def _framework_output(self, idea: ExtractedIdea) -> LegalAnalysisOutput:
         text = f"{idea.original_description} {idea.industry}".lower()
         privacy = ["Data processing terms and privacy notice alignment"]
         regulations = ["General contract, consumer protection, and advertising compliance"]
@@ -67,4 +106,3 @@ class LegalAgent(DomainAgent):
         if "australia" in normalized:
             return ["Assess Privacy Act obligations and Australian Consumer Law claim substantiation"]
         return ["Run local counsel review before launch in this geography"]
-
