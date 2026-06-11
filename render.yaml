@@ -1,0 +1,20 @@
+# Render.com one-click deploy (alternative if gcloud not installed)
+# https://dashboard.render.com → New → Blueprint → connect GitHub repo (agent-backend branch)
+
+services:
+  - type: web
+    name: venturepilot-backend
+    runtime: docker
+    dockerfilePath: backend/Dockerfile
+    dockerContext: .
+    plan: free
+    healthCheckPath: /health
+    envVars:
+      - key: DEMO_MODE
+        value: "true"
+      - key: PYTHONPATH
+        value: /app
+      - key: CORS_ORIGINS
+        sync: false
+      - key: MONGODB_URI
+        sync: false
