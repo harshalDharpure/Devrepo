@@ -13,11 +13,9 @@ import { API_URL } from "@/lib/utils";
 
 const INITIAL_STATES: Record<string, AgentStatus> = {
   front_desk: "pending",
-  orchestrator: "pending",
   market_research: "pending",
   competitor_analysis: "pending",
   legal: "pending",
-  debate: "pending",
   scoring: "pending",
   report: "pending",
 };
@@ -77,11 +75,9 @@ export function Dashboard() {
           market_research: "Market Agent researching…",
           competitor_analysis: "Competitor Agent analyzing landscape…",
           legal: "Legal Agent checking regulations…",
-          debate: "Debate Agent resolving conflicts…",
           scoring: "Scoring Engine computing metrics…",
           report: "Report Generator assembling final report…",
           front_desk: "Front Desk Agent validating idea…",
-          orchestrator: "Orchestrator coordinating agents…",
         };
         if (event.status === "running" && labels[event.agent]) {
           setStatusMessage(labels[event.agent]);

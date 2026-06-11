@@ -11,24 +11,20 @@ interface WorkflowGraphProps {
 
 const NODES: { id: AgentName; x: number; y: number }[] = [
   { id: "front_desk", x: 50, y: 10 },
-  { id: "orchestrator", x: 50, y: 28 },
-  { id: "market_research", x: 15, y: 52 },
-  { id: "competitor_analysis", x: 50, y: 52 },
-  { id: "legal", x: 85, y: 52 },
-  { id: "debate", x: 50, y: 72 },
-  { id: "scoring", x: 50, y: 86 },
+  { id: "market_research", x: 15, y: 42 },
+  { id: "competitor_analysis", x: 50, y: 42 },
+  { id: "legal", x: 85, y: 42 },
+  { id: "scoring", x: 50, y: 72 },
   { id: "report", x: 50, y: 96 },
 ];
 
 const EDGES: [AgentName, AgentName][] = [
-  ["front_desk", "orchestrator"],
-  ["orchestrator", "market_research"],
-  ["orchestrator", "competitor_analysis"],
-  ["orchestrator", "legal"],
-  ["market_research", "debate"],
-  ["competitor_analysis", "debate"],
-  ["legal", "debate"],
-  ["debate", "scoring"],
+  ["front_desk", "market_research"],
+  ["front_desk", "competitor_analysis"],
+  ["front_desk", "legal"],
+  ["market_research", "scoring"],
+  ["competitor_analysis", "scoring"],
+  ["legal", "scoring"],
   ["scoring", "report"],
 ];
 
