@@ -65,7 +65,8 @@ class DomainAgent:
 
         app_name = "venturepilot"
         user_id = "venturepilot-workflow"
-        session_id = f"{self.descriptor.name.value}-session"
+        from uuid import uuid4
+        session_id = f"{self.descriptor.name.value}-session-{uuid4().hex}"
         runner = InMemoryRunner(agent=adk_agent, app_name=app_name)
         await runner.session_service.create_session(
             app_name=app_name,
