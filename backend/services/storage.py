@@ -77,8 +77,7 @@ class MongoStore(Store):
 
 
 async def build_store(config: Settings = settings) -> Store:
-    if config.demo_mode:
-        return MemoryStore()
+    """Use MongoDB Atlas when available; fall back to in-memory."""
     try:
         store = MongoStore(config)
         await store._db().command("ping")
