@@ -89,9 +89,14 @@ async def get_report_pdf(session_id: str):
     if report is None:
         raise HTTPException(status_code=404, detail="Report not found")
     content = build_report_pdf(report)
+    try:
+        import reportlab  # type: ignore[import-not-found]  # noqa: F401
+        media_type = "application/pdf"
+    except ImportError:
+        media_type = "text/plain; charset=utf-8"
     return Response(
         content,
-        media_type="application/pdf",
+        media_type=media_type,
         headers={"Content-Disposition": f'attachment; filename="venturepilot-{session_id}.pdf"'},
     )
 
