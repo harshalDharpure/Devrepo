@@ -1,4 +1,4 @@
-# VenturePilot AI — Hackathon Submission Pack
+﻿# VenturePilot AI ΓÇö Hackathon Submission Pack
 
 **Partner track:** MongoDB  
 **Stack:** Google ADK + Gemini 2.5 Pro + MongoDB Atlas + Cloud Run + Next.js
@@ -21,7 +21,7 @@
 ```
 VenturePilot AI is a multi-agent startup validation system powered by Gemini and Google ADK.
 
-Unlike chatbots, it plans and executes a validation workflow: idea extraction, market research, competitor analysis, legal screening, scoring, and report generation—with live agent orchestration visible to the user.
+Unlike chatbots, it plans and executes a validation workflow: idea extraction, market research, competitor analysis, legal screening, scoring, and report generationΓÇöwith live agent orchestration visible to the user.
 
 MongoDB Atlas stores validation sessions, agent state, and final reports so multi-step agents maintain context across the pipeline.
 
@@ -54,7 +54,7 @@ gcloud run deploy venturepilot-backend `
 ### 3. Deploy frontend on Vercel
 
 1. Push `main` branch to GitHub
-2. https://vercel.com → Import `harshalDharpure/Devrepo`
+2. https://vercel.com ΓåÆ Import `harshalDharpure/Devrepo`
 3. Root directory: **`frontend`**
 4. Environment variable: `NEXT_PUBLIC_API_URL` = your Cloud Run backend URL
 5. Deploy
@@ -69,10 +69,10 @@ gcloud run services update venturepilot-backend `
 
 ### 5. MongoDB Atlas
 
-1. https://mongodb.com/atlas → free M0 cluster
+1. https://mongodb.com/atlas ΓåÆ free M0 cluster
 2. Database user + password
-3. Network Access → Allow `0.0.0.0/0`
-4. Connect → Drivers → copy URI → replace password
+3. Network Access ΓåÆ Allow `0.0.0.0/0`
+4. Connect ΓåÆ Drivers ΓåÆ copy URI ΓåÆ replace password
 5. Update Cloud Run: `MONGODB_URI=mongodb+srv://...`
 
 Collections created on first validation: `sessions`, `reports`
